@@ -3,8 +3,8 @@
 ### Revision 1.0.1 (RC)
 
 - [ ] Badges
-- [ ] Post Metrics
-- [ ] Auto-Tweet
+- [x] Post Metrics
+- [x] Auto-Tweet
 - [ ] [AutoGen v1.0](/about/candidate/autogen)
 
 ### Revision 1.0.0

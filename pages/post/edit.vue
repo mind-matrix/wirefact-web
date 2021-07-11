@@ -21,7 +21,7 @@
         <span>settings</span>
       </v-tooltip>
     </v-app-bar>
-    <w-editor v-model="content"></w-editor>
+    <w-editor ref="editor" v-model="content"></w-editor>
 
     <v-navigation-drawer app v-model="settings" width="400" temporary right>
       <v-list class="pb-4" dense>
@@ -91,34 +91,38 @@
         </v-list-item>
         <v-list-item>
           <v-list-item-content>
+            <v-list-item-title>Excerpt</v-list-item-title>
+            <v-textarea counter hint="Try to keep less than 180 characters" persistent-hint v-model="excerpt" outlined></v-textarea>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item class="pb-10">
+          <v-list-item-content>
             <v-list-item-title>AutoGen (Coming Soon)</v-list-item-title>
             <v-btn disabled block elevation="0" outlined rounded>
               <v-icon class="pl-1">mdi-file-document-outline</v-icon>
               generate title
             </v-btn>
-            <v-btn disabled block elevation="0" outlined rounded>
+            <v-btn @click="generate('hashtags')" block elevation="0" outlined rounded>
               <v-icon class="pl-1">mdi-pound</v-icon>
-              generate hashtags
+              find hashtags
             </v-btn>
-            <v-btn disabled block elevation="0" outlined rounded>
+            <v-btn @click="generate('topics')" block elevation="0" outlined rounded>
               <v-icon class="pl-1">mdi-text-short</v-icon>
               find topics
             </v-btn>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item>
-          <v-list-item-content>
-            <v-list-item-title>Excerpt</v-list-item-title>
-            <v-textarea v-model="excerpt" outlined></v-textarea>
+            <v-btn @click="generate('excerpt')" block elevation="0" outlined rounded>
+              <v-icon class="pl-1">mdi-image-text</v-icon>
+              generate excerpt
+            </v-btn>
           </v-list-item-content>
         </v-list-item>
       </v-list>
       <v-footer absolute>
         <v-spacer></v-spacer>
-        <v-btn :disabled="!isValid()" @click="onDraft" elevation="0" color="success" outlined class="mr-2">
+        <v-btn :disabled="!isValid() || submitting" @click="onDraft" elevation="0" color="success" outlined class="mr-2">
           save draft
         </v-btn>
-        <v-btn :disabled="!isValid()" @click="onPublish" elevation="0" color="primary">
+        <v-btn :disabled="!isValid() || submitting" @click="onPublish" elevation="0" color="primary">
           publish
         </v-btn>
       </v-footer>
@@ -161,7 +165,7 @@
 
 <script>
 import hashtagfy from "hashtagfy";
-import { ClientService } from '~/service';
+import { AutoGenService, ClientService } from '~/service';
 
 function findImage(content) {
   if (!content) return null
@@ -174,6 +178,12 @@ function findImage(content) {
     }
   }
   return null
+}
+
+function getText(html) {
+  let div = document.createElement('div')
+  div.innerHTML = html
+  return div.innerText
 }
 
 export default {
@@ -189,7 +199,9 @@ export default {
     selectCover: false,
     coverSelection: null,
     client: null,
-    excerpt: null
+    autogen: null,
+    excerpt: null,
+    submitting: false
   }),
   methods: {
     toggleSidebar() {
@@ -198,15 +210,17 @@ export default {
     onCommaKey(e) {
       if (e.key === ",") {
         e.preventDefault()
+        if (this.currtag in this.hashtags) return
         this.hashtags.push(this.currtag)
         this.currtag = null
         this.onHashTag()
       }
     },
     onHashTag() {
-      this.hashtags = this.hashtags.map(hashtag => hashtagfy(hashtag))
+      this.hashtags = Array.from(new Set(this.hashtags.map(hashtag => hashtagfy(hashtag, { capitalize: false }))))
     },
     onDraft() {
+      this.submitting = true
       const post = {
         title: this.title,
         content: this.content,
@@ -220,9 +234,12 @@ export default {
         this.$router.replace("/posts/draft")
       }).catch((err) => {
         console.log(`E: ${err.message || 'unknown error'}`)
+      }).finally(() => {
+        this.submitting = false
       })
     },
     onPublish() {
+      this.submitting = true
       const post = {
         title: this.title,
         content: this.content,
@@ -236,6 +253,8 @@ export default {
         this.$router.replace("/posts/published")
       }).catch((err) => {
         console.log(`E: ${err.message || 'unknown error'}`)
+      }).finally(() => {
+        this.submitting = false
       })
     },
     updateCoverFromContent() {
@@ -256,10 +275,27 @@ export default {
     },
     isValid() {
       return this.title && this.title.trim().length && this.content && this.cover
+    },
+    async generate(event) {
+      let html = this.$refs.editor.editor.getHTML()
+      let text = getText(html)
+      if (!text.trim().length) return
+
+      if (event === "excerpt") {
+        let candidates = this.autogen.excerpt(text)
+        this.excerpt = candidates[Math.floor(Math.random()*candidates.length)].content.trim()
+      } else if (event === "topics") {
+        let topics = this.autogen.topics(text).slice(0, 10)
+        this.topics = topics
+      } else if (event === "hashtags") {
+        let hashtags = this.autogen.hashtags(text)
+        this.hashtags = hashtags
+      }
     }
   },
   mounted() {
     this.client = new ClientService(this.$store)
+    this.autogen = new AutoGenService(this.$store)
   }
 };
 </script>

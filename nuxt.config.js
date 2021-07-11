@@ -143,7 +143,7 @@ export default {
 
     // Build Configuration: https://go.nuxtjs.dev/config-build
     build: {
-        transpile: ['vuetify/lib', 'tiptap-vuetify', 'vuex-persist']
+        transpile: ['vuetify/lib', 'tiptap-vuetify', 'vuex-persist', 'text-summarization']
     },
 
     generate: {
