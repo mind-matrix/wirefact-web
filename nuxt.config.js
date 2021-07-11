@@ -39,6 +39,7 @@ export default {
     // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
     plugins: [
         { src: '~/plugins/tiptap-vuetify', mode: 'client' },
+        { src: '~/plugins/vuetify-datetime-picker', mode: 'client' },
         { src: '~/plugins/vuex-persist', ssr: false },
         { src: '~/plugins/vue-masonry', ssr: false }
     ],

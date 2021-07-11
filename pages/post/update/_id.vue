@@ -21,7 +21,7 @@
         <span>settings</span>
       </v-tooltip>
     </v-app-bar>
-    <w-editor v-model="content"></w-editor>
+    <w-editor ref="editor" v-model="content"></w-editor>
 
     <v-navigation-drawer app v-model="settings" width="400" temporary right>
       <v-list class="pb-4" dense>
@@ -45,6 +45,33 @@
             </v-btn>
           </v-list-item-content>
         </v-list-item>
+        <template v-if="['ADMIN'].includes(role)">
+          <v-list-item>
+            <v-list-item-content>
+              <v-list-item-title>Publishing Date</v-list-item-title>
+              <v-datetime-picker
+                v-model="createdAt"
+                type="datetime"
+                outlined
+                placeholder="Enter a valid date"
+                dense
+              >
+                <template v-slot:dateIcon>
+                  <v-icon>mdi-calendar</v-icon>
+                </template>
+                <template v-slot:timeIcon>
+                  <v-icon>mdi-clock</v-icon>
+                </template>
+              </v-datetime-picker>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item>
+            <v-list-item-content>
+              <v-list-item-title>Author</v-list-item-title>
+              <w-user-select v-model="author"></w-user-select>
+            </v-list-item-content>
+          </v-list-item>
+        </template>
         <v-list-item>
           <v-list-item-content>
             <v-list-item-title>Title</v-list-item-title>
@@ -91,25 +118,53 @@
         </v-list-item>
         <v-list-item>
           <v-list-item-content>
+            <v-list-item-title>Excerpt</v-list-item-title>
+            <v-textarea
+              counter
+              hint="Try to keep less than 180 characters"
+              persistent-hint
+              v-model="excerpt"
+              outlined
+            ></v-textarea>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item class="pb-10">
+          <v-list-item-content>
             <v-list-item-title>AutoGen (Coming Soon)</v-list-item-title>
             <v-btn disabled block elevation="0" outlined rounded>
               <v-icon class="pl-1">mdi-file-document-outline</v-icon>
               generate title
             </v-btn>
-            <v-btn disabled block elevation="0" outlined rounded>
+            <v-btn
+              @click="generate('hashtags')"
+              block
+              elevation="0"
+              outlined
+              rounded
+            >
               <v-icon class="pl-1">mdi-pound</v-icon>
-              generate hashtags
+              find hashtags
             </v-btn>
-            <v-btn disabled block elevation="0" outlined rounded>
+            <v-btn
+              @click="generate('topics')"
+              block
+              elevation="0"
+              outlined
+              rounded
+            >
               <v-icon class="pl-1">mdi-text-short</v-icon>
               find topics
             </v-btn>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item>
-          <v-list-item-content>
-            <v-list-item-title>Excerpt</v-list-item-title>
-            <v-textarea v-model="excerpt" outlined></v-textarea>
+            <v-btn
+              @click="generate('excerpt')"
+              block
+              elevation="0"
+              outlined
+              rounded
+            >
+              <v-icon class="pl-1">mdi-image-text</v-icon>
+              generate excerpt
+            </v-btn>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -158,19 +213,25 @@
 
 <script>
 import hashtagfy from "hashtagfy";
-import { ClientService } from '~/service';
-
+import { AutoGenService, ClientService } from '~/service';
+import { UserRole } from '~/assets/roles';
 function findImage(content) {
-  if (!content) return null
+  if (!content) return null;
   for (let item of content) {
     if (item.type === "image") {
-      return item
+      return item;
     } else if (item.content && Array.isArray(item.content)) {
-      let image = findImage(item.content)
-      if (image) return image
+      let image = findImage(item.content);
+      if (image) return image;
     }
   }
-  return null
+  return null;
+}
+
+function getText(html) {
+  let div = document.createElement("div");
+  div.innerHTML = html;
+  return div.innerText;
 }
 
 export default {
@@ -188,8 +249,18 @@ export default {
     coverSelection: null,
     client: null,
     excerpt: null,
-    draft: false
+    draft: false,
+    createdAt: new Date(),
+    author: null,
+    autogen: null
   }),
+  computed: {
+    role() {
+      return Object.keys(UserRole).find(
+        (role) => UserRole[role] === this.$store.state.user.role
+      );
+    },
+  },
   methods: {
     toggleSidebar() {
       this.$nuxt.$emit("toggle-sidebar")
@@ -206,6 +277,7 @@ export default {
       this.hashtags = this.hashtags.map(hashtag => hashtagfy(hashtag))
     },
     onPublish() {
+      this.submitting = true;
       const post = {
         title: this.title,
         content: this.content,
@@ -215,11 +287,17 @@ export default {
         excerpt: this.excerpt,
         draft: false
       }
+      if (this.$store.state.user.role === UserRole.ADMIN) {
+        if (this.author) post.author = this.author.id;
+        if (this.createdAt) post.createdAt = this.createdAt;
+      }
       this.client.put("post", this.id, post).then((response) => {
         this.$router.replace("/posts/published")
       }).catch((err) => {
         console.log(`E: ${err.message || 'unknown error'}`)
-      })
+      }).finally(() => {
+          this.submitting = false;
+        });
     },
     updateCoverFromContent() {
       if (!this.cover && this.content) {
@@ -239,10 +317,30 @@ export default {
     },
     isValid() {
       return this.title && this.title.trim().length && this.content && this.cover
-    }
+    },
+    async generate(event) {
+      let html = this.$refs.editor.editor.getHTML();
+      let text = getText(html);
+      if (!text.trim().length) return;
+
+      if (event === "excerpt") {
+        let candidates = this.autogen.excerpt(text);
+        this.excerpt =
+          candidates[
+            Math.floor(Math.random() * candidates.length)
+          ].content.trim();
+      } else if (event === "topics") {
+        let topics = this.autogen.topics(text).slice(0, 10);
+        this.topics = topics;
+      } else if (event === "hashtags") {
+        let hashtags = this.autogen.hashtags(text);
+        this.hashtags = hashtags;
+      }
+    },
   },
   mounted() {
     this.client = new ClientService(this.$store)
+    this.autogen = new AutoGenService(this.$store)
     this.client.get("post",this.$route.params.id).then(({ post }) => {
       this.id = post.id
       this.title = post.title
@@ -252,6 +350,8 @@ export default {
       this.cover = post.cover
       this.excerpt = post.excerpt
       this.draft = post.draft
+      this.author = post.author
+      this.createdAt = new Date(post.createdAt)
     })
   }
 };

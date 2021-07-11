@@ -11,8 +11,10 @@
                 @{{ post.author.username }}
             </small>
         </h1>
-        <v-spacer></v-spacer>
       </v-container>
+      <v-btn v-if="isAdmin" fab fixed app icon bottom right link :to="`/post/update/${post.id}`" class="grey lighten-3">
+          <v-icon>mdi-pen</v-icon>
+      </v-btn>
       <tiptap-vuetify
         v-show="false"
         v-model="post.content"
@@ -64,6 +66,7 @@ import { ClientService } from "~/service";
 import { TiptapVuetify } from "tiptap-vuetify";
 
 import { EXTENSIONS, NATIVE_EXTENSIONS } from "~/assets/extensions";
+import { UserRole } from '~/assets/roles';
 
 export default {
   components: {
@@ -77,6 +80,11 @@ export default {
     extensions: EXTENSIONS,
     nativeExtensions: NATIVE_EXTENSIONS,
   }),
+  computed: {
+    isAdmin() {
+      return (this.$store.state.user && this.$store.state.user.role === UserRole.ADMIN)
+    }
+  },
   mounted() {
     this.client = new ClientService(this.$store);
     this.client

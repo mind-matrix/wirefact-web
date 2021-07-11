@@ -28,7 +28,7 @@ import { ClientService } from "~/service";
 export default {
   layout: "default",
   head: {
-    title: "WireFact"
+    title: "Home"
   },
   data: () => ({
     posts: [],
