@@ -1,6 +1,6 @@
 <template>
     <v-card link :to="`/post/${id}`" outlined>
-        <v-img v-if="cover" width="100%" height="auto" :src="`https://wirefact-media.s3.ap-south-1.amazonaws.com/${cover.key}`"></v-img>
+        <v-img v-if="cover" width="100%" height="auto" max-height="280" :src="`https://wirefact-media.s3.ap-south-1.amazonaws.com/${cover.key}`"></v-img>
         <v-card-subtitle class="pl-0 pb-0">
             <v-row dense>
                 <v-col cols="auto" class="pa-0 px-2">

@@ -2,15 +2,19 @@
   <v-container fluid>
     <v-container v-if="post" fluid>
       <v-container class="mb-4" fluid>
+        <h1 class="title">
+          {{ post.title }}
+        </h1>
         <v-avatar class="mr-2">
           <v-img :max-height="50" width="auto" contain :src="post.author.gravatar"></v-img>
         </v-avatar>
-        <h1 class="d-inline-block text-body-1" style="vertical-align: middle;">
+        <h2 class="d-inline-block text-body-1" style="vertical-align: middle;">
             {{ post.author.name }}
             <small class="d-block text-caption">
                 @{{ post.author.username }}
             </small>
-        </h1>
+        </h2>
+        <time class="d-block text-right grey--text text--darken-1">{{ new Date(post.createdAt).toUTCString() }}</time>
       </v-container>
       <v-btn v-if="isAdmin" fab fixed app icon bottom right link :to="`/post/update/${post.id}`" class="grey lighten-3">
           <v-icon>mdi-pen</v-icon>
