@@ -50,6 +50,27 @@ export const LINKS = [{
         title: "About",
         to: "/about",
         auth: false
+    },
+    {
+        icon: "mdi-gavel",
+        title: "Legal",
+        auth: false,
+        children: [{
+            icon: "mdi-book-open-page-variant",
+            title: "Terms of Service",
+            to: "/legal/tos",
+            auth: false
+        }, {
+            icon: "mdi-book-open-page-variant",
+            title: "Privacy Policy",
+            to: "/legal/privacy_policy",
+            auth: false
+        }, {
+            icon: "mdi-book-open-page-variant",
+            title: "Cookie Policy",
+            to: "/legal/cookie_policy",
+            auth: false
+        }]
     }
 ]
 
