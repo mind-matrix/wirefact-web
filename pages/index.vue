@@ -28,7 +28,10 @@ import { ClientService } from "~/service";
 export default {
   layout: "default",
   head: {
-    title: "Home"
+    title: "Home",
+    meta: [
+      { hid: 'og:url', property: 'og:url', content: 'https://wirefact.com/' }
+    ]
   },
   data: () => ({
     posts: [],

@@ -29,7 +29,10 @@ import { ClientService } from '~/service'
 export default {
     layout: "noauth",
     head: {
-        title: "Login"
+        title: "Login",
+        meta: [
+            { hid: 'og:url', property: 'og:url', content: 'https://wirefact.com/login' }
+        ]
     },
     data: () => ({
         identifier: null,

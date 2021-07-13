@@ -71,14 +71,39 @@ import { TiptapVuetify } from "tiptap-vuetify";
 
 import { EXTENSIONS, NATIVE_EXTENSIONS } from "~/assets/extensions";
 import { UserRole } from '~/assets/roles';
+import axios from 'axios';
 
 export default {
+  async asyncData({ route }) {
+    let { post } = (await axios.get(`${process.env.API}/post/${ route.params.id }`)).data
+    return {
+      metadata: {
+        id: post.id,
+        title: post.title,
+        image: `https://wirefact-media.s3.ap-south-1.amazonaws.com/${post.cover.key}`,
+        imageAlt: post.cover.alt,
+        description: post.excerpt
+      },
+      post
+    }
+  },
+  head() {
+    return {
+      title: this.metadata.title,
+      meta: [
+        { hid: 'og:title', property: 'og:title', content: this.metadata.title },
+        { hid: 'og:description', property: 'og:description', content: this.metadata.description },
+        { hid: 'og:image', property: 'og:image', content: this.metadata.image },
+        { hid: 'og:image:alt', property: 'og:image:alt', content: this.metadata.imageAlt },
+        { hid: 'og:url', property: 'og:url', content: `https://wirefact.com/post/${this.metadata.id}` }
+      ]
+    }
+  },
   components: {
     TiptapVuetify,
   },
   data: () => ({
     client: null,
-    post: null,
     content: null,
     editor: null,
     extensions: EXTENSIONS,
@@ -91,19 +116,9 @@ export default {
   },
   mounted() {
     this.client = new ClientService(this.$store);
-    this.client
-      .get("post", this.$route.params.id)
-      .then(({ post }) => {
-        this.post = post;
-        if (this.editor && !this.content) {
-          this.content = this.editor.getHTML();
-        }
-      })
-      .catch((err) => {
-        this.$nuxt.error({
-          message: err.message || "could not load post/draft",
-        });
-      });
+    if (this.editor && !this.content) {
+      this.content = this.editor.getHTML();
+    }
   },
   methods: {
     initEditor({ editor }) {

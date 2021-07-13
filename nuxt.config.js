@@ -8,7 +8,7 @@ export default {
     ssr: false,
 
     // Target: https://go.nuxtjs.dev/config-target
-    target: 'static',
+    target: 'server',
 
     // Global page headers: https://go.nuxtjs.dev/config-head
     head: {
@@ -18,8 +18,9 @@ export default {
             { charset: 'utf-8' },
             { name: 'viewport', content: 'width=device-width, initial-scale=1' },
             { hid: 'description', name: 'description', content: 'The most fascinating and informative educational screen under your fingertips' },
-            { hid: 'og:title', name: 'og:title', content: 'WireFact' },
-            { hid: 'og:description', name: 'og:title', content: 'The most fascinating and informative educational screen under your fingertips' }
+            { hid: 'og:title', property: 'og:title', content: 'WireFact' },
+            { hid: 'og:description', property: 'og:description', content: 'The most fascinating and informative educational screen under your fingertips' },
+            { hid: 'og:locale', property: 'og:locale', content: 'en_IN' }
         ],
         link: [
             { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
@@ -97,6 +98,7 @@ export default {
         hostname: "https://wirefact.com",
         sitemaps: [{
             path: "/pages-sitemap.xml",
+            generate: true,
             exclude: [
                 "/reset-password",
                 "/profile",
@@ -126,6 +128,7 @@ export default {
             priority: 0.5
         }, {
             path: "/blog-posts-sitemap.xml",
+            generate: false,
             exclude: [
                 "/",
                 "/*",

@@ -79,7 +79,10 @@ import parsePhoneNumber from "libphonenumber-js"
 export default {
     layout: "noauth",
     head: {
-        title: "Register"
+        title: "Register",
+        meta: [
+            { hid: 'og:url', property: 'og:url', content: 'https://wirefact.com/register' }
+        ]
     },
     data: () => ({
         client: null,

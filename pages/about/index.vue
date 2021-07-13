@@ -11,6 +11,12 @@
 
 <script>
 export default {
+    head: {
+        title: "About",
+        meta: [
+            { hid: 'og:url', property: 'og:url', content: 'https://wirefact.com/about' }
+        ]
+    },
     data: () => ({
         page: null
     }),
