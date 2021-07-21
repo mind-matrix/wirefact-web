@@ -1,3 +1,0 @@
-# Media Storage Policy
-
-Starting from July 1, 2021 we have introduced a new storage policy that segregates user storage space. Previously, we used a different service provider who used a shared storage space for all user media. Since our shift to the new platform, we have decided to assign separate storage spaces for every user. As such, we can provide faster and a more secure experience in dealing with images, audios, videos, etc. on WireFact. However, we have introduced a limit to the maximum storage space allotted per user. Currently, it is set to 100 MB. We do intend to increase this cap eventually but in order to do so, we need the support of our donors and community. Kindly consider joining us on social media or donating however much you see fit to our fund.

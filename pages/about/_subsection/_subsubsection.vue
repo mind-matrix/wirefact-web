@@ -5,19 +5,19 @@
                 <v-progress-circular indeterminate></v-progress-circular>
             </v-container>
         </template>
-        <nuxt-content v-else :document="page"></nuxt-content>
+        <div v-html="page"></div>
     </v-container>
 </template>
 
 <script>
+import { ABOUT } from '~/assets/doc'
 export default {
-    data: () => ({
-        page: null
-    }),
-    async mounted() {
-        const { subsection, subsubsection } = this.$route.params
-        if (!subsection || !subsubsection) this.$router.replace("/about")
-        this.page = await this.$content(`about/${subsection}/${subsubsection}`).fetch()
+    async asyncData({ route }) {
+        const { subsection, subsubsection } = route.params
+        const page = ABOUT[subsection][subsubsection]
+        return {
+            page
+        }
     }
 }
 </script>

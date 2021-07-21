@@ -1,3 +1,59 @@
 * {
     font-family: 'Euclid Circular';
 }
+
+.tiptap-vuetify-editor__content {
+    max-height: calc(100vh - 220px);
+}
+
+@media screen and (max-width: 715px) {
+    .tiptap-vuetify-editor__content {
+        max-height: calc(100vh - 240px);
+    }
+}
+
+@media screen and (max-width: 395px) {
+    .tiptap-vuetify-editor__content {
+        max-height: calc(100vh - 260px);
+    }
+}
+
+.tiptap-vuetify-editor__content img {
+    display: block;
+    height: auto;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.tiptap-vuetify-editor>.v-card {
+    box-shadow: none !important;
+    border: 1.5px solid grey !important;
+}
+
+.youtube-embed-container {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.youtube-embed-container iframe,
+.youtube-embed-container object,
+.youtube-embed-container embed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.youtube-embed {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.font-header {
+    font-size: 1.5rem;
+    font-family: 'Dosis', sans-serif !important;
+}

@@ -5,23 +5,24 @@
                 <v-progress-circular indeterminate></v-progress-circular>
             </v-container>
         </template>
-        <nuxt-content v-else :document="page"></nuxt-content>
+        <div v-html="page"></div>
     </v-container>
 </template>
 
 <script>
+import { ABOUT } from '~/assets/doc'
 export default {
+    async asyncData() {
+        const page = ABOUT["index"]
+        return {
+            page
+        }
+    },
     head: {
         title: "About",
         meta: [
             { hid: 'og:url', property: 'og:url', content: 'https://wirefact.com/about' }
         ]
-    },
-    data: () => ({
-        page: null
-    }),
-    async mounted() {
-        this.page = await this.$content(`about/index`).fetch()
     }
 }
 </script>

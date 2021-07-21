@@ -122,32 +122,3 @@ export default {
   },
 };
 </script>
-
-<style>
-.tiptap-vuetify-editor__content {
-  max-height: calc(100vh - 220px);
-}
-
-@media screen and (max-width: 715px) {
-  .tiptap-vuetify-editor__content {
-    max-height: calc(100vh - 240px);
-  }
-}
-
-@media screen and (max-width: 395px) {
-  .tiptap-vuetify-editor__content {
-    max-height: calc(100vh - 260px);
-  }
-}
-
-.tiptap-vuetify-editor__content img {
-  display: block;
-  height: auto;
-  max-width: 100%;
-  margin: 0 auto;
-}
-.tiptap-vuetify-editor > .v-card {
-  box-shadow: none !important;
-  border: 1.5px solid grey;
-}
-</style>

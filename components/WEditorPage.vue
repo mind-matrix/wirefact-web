@@ -90,6 +90,20 @@
         </v-list-item>
         <v-list-item>
           <v-list-item-content>
+            <v-list-item-title>slug</v-list-item-title>
+            <v-text-field
+              v-model="slug"
+              :color="slugExists ? 'red':'primary'"
+              :error-messages="slugExists ? 'A post with this slug already exists. Try to change the wording.':null"
+              persistent-hint
+              outlined
+              placeholder="Enter a slug (Optional)"
+              dense
+            ></v-text-field>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item>
+          <v-list-item-content>
             <v-list-item-title>Hashtags</v-list-item-title>
             <v-combobox
               ref="hashtags"
@@ -237,6 +251,7 @@
 import hashtagfy from "hashtagfy";
 import { AutoGenService, ClientService } from "~/service";
 import { UserRole } from "~/assets/roles";
+import slugify from "slugify";
 
 function findImage(content) {
   if (!content) return null;
@@ -273,6 +288,8 @@ export default {
     currtag: null,
     topics: [],
     cover: null,
+    slug: null,
+    slugExists: false,
     selectCover: false,
     coverSelection: null,
     client: null,
@@ -327,6 +344,11 @@ export default {
         if (this.author) post.author = this.author.id;
         if (this.createdAt) post.createdAt = this.createdAt;
       }
+
+      if (this.slug && !this.slugExists && this.slug.trim().length) {
+        post.slug = this.slug.trim()
+      }
+
       this.$emit("draft", post)
       this.submitting = false;
     },
@@ -346,7 +368,11 @@ export default {
         if (this.author) post.author = this.author.id;
         if (this.createdAt) post.createdAt = this.createdAt;
       }
-      console.log(post);
+
+      if (this.slug && !this.slugExists && this.slug.trim().length) {
+        post.slug = this.slug.trim()
+      }
+
       this.$emit("publish", post)
       this.submitting = false
     },
@@ -411,11 +437,32 @@ export default {
     this.updateByValue();
   },
   watch: {
-      value: {
-        handler(val) {
-            this.updateByValue();
+    value: {
+      handler(val) {
+        this.updateByValue();
+      }
+    },
+    title: {
+      async handler(val) {
+        if (!val || !val.trim().length) return
+        this.slug = slugify(val, { lower: true })
+        let { exists } = await this.client.post("post-exists", { slug: this.slug })
+        if (exists) {
+          this.slug = `${this.slug}-${Math.floor(Math.random()*1000)}`
         }
       }
+    },
+    slug: {
+      async handler(val) {
+        this.slug = slugify(val, { lower: true })
+        this.slugExists = false
+        if (!this.slug.trim().length) return
+        let { exists } = await this.client.post("post-exists", { slug: this.slug })
+        if (exists) {
+          this.slugExists = true
+        }
+      }
+    }
   }
 };
 </script>

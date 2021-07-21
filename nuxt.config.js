@@ -1,9 +1,41 @@
-import axios from 'axios'
-import colors from 'vuetify/es5/util/colors'
+const axios = require('axios')
+const colors = require('vuetify/es5/util/colors').default
+const dotenv = require('dotenv')
 
-const API_ENDPOINT = "https://api.wirefact.com"
+dotenv.config()
 
-export default {
+const STATIC_PAGES_SITEMAP = {
+    path: "/pages-sitemap.xml",
+    exclude: [
+        "/reset-password",
+        "/profile",
+        "/media",
+        "/profiles/*",
+        "/posts/*",
+        "/post/*",
+        "/dashboard",
+        "/invitation",
+        "/statics"
+    ],
+    routes: [{
+            url: "/",
+            priority: 1.0
+        },
+        "login",
+        "register",
+        "about",
+        "about/media",
+        "about/profile-picture",
+        "about/roadmap",
+        "about/roles",
+        "about/sponsor",
+        "about/candidate/autogen"
+    ],
+    changefreq: "monthly",
+    priority: 0.5
+}
+
+module.exports = {
     // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
     ssr: false,
 
@@ -23,12 +55,16 @@ export default {
             { hid: 'og:locale', property: 'og:locale', content: 'en_IN' }
         ],
         link: [
-            { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+            { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+            { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+            { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'crossorigin' },
+            { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Dosis:wght@600&display=swap' }
         ]
     },
 
     env: {
-        API: API_ENDPOINT
+        API_URL: process.env.API_URL,
+        APP_TOKEN: process.env.APP_TOKEN
     },
 
     // Global CSS: https://go.nuxtjs.dev/config-css
@@ -42,7 +78,8 @@ export default {
         { src: '~/plugins/tiptap-vuetify', mode: 'client' },
         { src: '~/plugins/vuetify-datetime-picker', mode: 'client' },
         { src: '~/plugins/vuex-persist', ssr: false },
-        { src: '~/plugins/vue-masonry', ssr: false }
+        { src: '~/plugins/vue-masonry', ssr: false },
+        { src: '~/plugins/vue-plyr', ssr: false }
     ],
 
     // Auto import components: https://go.nuxtjs.dev/config-components
@@ -60,9 +97,8 @@ export default {
     modules: [
         // https://go.nuxtjs.dev/pwa
         '@nuxtjs/pwa',
-        // https://go.nuxtjs.dev/content
-        '@nuxt/content',
-        '@nuxtjs/sitemap'
+        '@nuxtjs/sitemap',
+        'vue-social-sharing/nuxt'
     ],
 
     // PWA module configuration: https://go.nuxtjs.dev/pwa
@@ -71,9 +107,6 @@ export default {
             lang: 'en'
         }
     },
-
-    // Content module configuration: https://go.nuxtjs.dev/config-content
-    content: {},
 
     // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
     vuetify: {
@@ -94,55 +127,39 @@ export default {
         }
     },
 
-    sitemap: {
-        hostname: "https://wirefact.com",
-        sitemaps: [{
-            path: "/pages-sitemap.xml",
-            generate: true,
-            exclude: [
-                "/reset-password",
-                "/profile",
-                "/media",
-                "/profiles/*",
-                "/posts/*",
-                "/post/*",
-                "/dashboard",
-                "/invitation",
-                "/statics"
-            ],
-            routes: [{
-                    url: "/",
-                    priority: 1.0
+    sitemap: async function() {
+        const { count } = (await axios.get(`${process.env.API_URL}/posts/count?token=${process.env.APP_TOKEN}`)).data
+        const pages = Math.ceil(count / 15)
+        const sitemaps = []
+        for (let i = 0; i < pages; i += 1) {
+            sitemaps.push({
+                path: `/blog-posts-sitemap.${i*15}-${i+15}.xml`,
+                exclude: [
+                    "/",
+                    "/*",
+                    "/**/*"
+                ],
+                routes: async() => {
+                    const { posts } = (await axios.get(`${process.env.API_URL}/posts?skip=${i*15}&limit=15`)).data
+                    return posts.map(post => ({
+                        url: `/post/${post.slug}`,
+                        lastmod: post.updatedAt,
+                        priority: 0.5
+                    }))
                 },
-                "login",
-                "register",
-                "about",
-                "about/media",
-                "about/profile-picture",
-                "about/roadmap",
-                "about/roles",
-                "about/sponsor",
-                "about/candidate/autogen"
-            ],
-            changefreq: "monthly",
-            priority: 0.5
-        }, {
-            path: "/blog-posts-sitemap.xml",
-            generate: false,
-            exclude: [
-                "/",
-                "/*",
-                "/**/*"
-            ],
-            routes: async() => {
-                const { posts } = (await axios.get(`${API_ENDPOINT}/posts?skip=0&limit=50000`)).data
-                return posts.map(post => `/post/${post.id}`)
-            },
-            changefreq: "daily",
-            lastmod: new Date(),
-            priority: 0.5,
-            gzip: true
-        }]
+                changefreq: "daily",
+                lastmod: new Date(),
+                priority: 0.5,
+                gzip: true
+            })
+        }
+        return {
+            hostname: "https://wirefact.com",
+            sitemaps: [
+                STATIC_PAGES_SITEMAP,
+                ...sitemaps
+            ]
+        }
     },
 
     // Build Configuration: https://go.nuxtjs.dev/config-build

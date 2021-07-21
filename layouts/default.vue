@@ -96,7 +96,10 @@
     <v-app-bar elevate-on-scroll class="white" fixed app>
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       <v-toolbar-title v-text="titles[currentTitle]" />
-      <v-spacer></v-spacer>
+      <v-spacer class="spacer"></v-spacer>
+      <v-container fluid class="pt-10 nav searchbar">
+        <w-search></w-search>
+      </v-container>
       <template v-if="$store.state.token">
         <v-menu offset-y>
           <template v-slot:activator="{ on, attrs }">
@@ -186,7 +189,7 @@ export default {
   methods: {
     signout() {
       this.$store.commit("deauth");
-      this.$router.replace("/login");
+      this.$router.replace("/");
     },
     signin() {
       this.$router.push("/login");
@@ -197,3 +200,20 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.spacer {
+  display: none;
+}
+.searchbar {
+  max-width: 480px;
+}
+@media screen and (max-width: 880px) {
+  .nav.searchbar {
+    display: none;
+  }
+  .spacer {
+    display: block;
+  }
+}
+</style>

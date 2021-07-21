@@ -1,6 +1,7 @@
 export const state = () => ({
   token: null,
-  user: null
+  user: null,
+  favourites: []
 })
 
 export const mutations = {
@@ -11,5 +12,9 @@ export const mutations = {
   deauth(state: { token: null; user: null }) {
     state.token = null
     state.user = null
+  },
+  toggleFav(state: { favourites: string[] }, id: string) {
+    if (state.favourites.includes(id)) state.favourites = state.favourites.filter(item => item !== id)
+    else state.favourites.push(id)
   }
 }

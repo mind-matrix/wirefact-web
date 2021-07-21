@@ -168,7 +168,7 @@ export default {
   methods: {
     signout() {
       this.$store.commit("deauth");
-      this.$router.replace("/login");
+      this.$router.replace("/");
     },
     signin() {
       this.$router.push("/login");

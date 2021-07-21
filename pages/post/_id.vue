@@ -4,6 +4,14 @@
       <v-container class="mb-4" fluid>
         <h1 class="title">
           {{ post.title }}
+          <template v-if="canCreateNarration">
+            <v-container aria-hidden="true" fluid class="my-2 text-right">
+              <v-btn @click="addNarration" text outlined color="black">
+                <v-icon>mdi-microphone</v-icon>
+                add narration
+              </v-btn>
+            </v-container>
+          </template>
         </h1>
         <v-avatar class="mr-2">
           <v-img :max-height="50" width="auto" contain :src="post.author.gravatar"></v-img>
@@ -19,6 +27,9 @@
       <v-btn v-if="isAdmin" fab fixed app icon bottom right link :to="`/post/update/${post.id}`" class="grey lighten-3">
           <v-icon>mdi-pen</v-icon>
       </v-btn>
+      <template v-if="post.narration">
+        <w-narrate :narration="post.narration" :poster="post.cover" :title="post.title"></w-narrate>
+      </template>
       <tiptap-vuetify
         v-show="false"
         v-model="post.content"
@@ -36,7 +47,6 @@
         indeterminate
         color="primary"
       ></v-progress-circular>
-
       <div>
           <template v-for="tag in post.hashtags">
               <a v-if="tag.toLowerCase() === '#lgbtq'" :key="tag">
@@ -55,6 +65,37 @@
           </v-tooltip>
         </span>
       </div>
+      <v-row>
+        <v-col>  
+          <h3>Comments</h3>
+        </v-col>
+        <v-col class="text-right">
+          <v-row dense>
+            <v-col cols="12">
+              <v-icon>mdi-comment</v-icon>
+              {{ post.comments.count }}
+            </v-col>
+            <v-col cols="12">
+              <template v-if="post.comments.count">
+                <span class="grey--text" v-if="post.comments.sentiment === 0">Mixed reviews</span>
+                <span class="red--text" v-else-if="post.comments.sentiment < 0">Mostly negative reviews</span>
+                <span class="green--text" v-else-if="post.comments.sentiment > 0">Mostly positive reviews</span>
+              </template>
+              <template v-else>
+                <span class="grey--text">No reviews</span>
+              </template>
+              <template v-if="post.comments.positive || post.comments.negative">
+                <v-icon color="green">mdi-chevron-up</v-icon>
+                {{ Math.floor(post.comments.positive*100) }}%
+                <v-icon color="red">mdi-chevron-down</v-icon>
+                {{ Math.floor(post.comments.negative*100) }}%
+              </template>
+            </v-col>
+          </v-row>
+        </v-col>
+      </v-row>
+      <w-comment-editor v-if="canComment" :post-id="post.id" @update="$refs.comments.refresh()"></w-comment-editor>
+      <w-comment-list ref="comments" :post-id="post.id"></w-comment-list>
     </v-container>
     <v-progress-circular
       class="d-block mx-auto"
@@ -75,7 +116,7 @@ import axios from 'axios';
 
 export default {
   async asyncData({ route }) {
-    let { post } = (await axios.get(`${process.env.API}/post/${ route.params.id }`)).data
+    let { post } = (await axios.get(`${process.env.API_URL}/post/${ route.params.id }?token=${process.env.APP_TOKEN}`)).data
     return {
       metadata: {
         id: post.id,
@@ -112,12 +153,20 @@ export default {
   computed: {
     isAdmin() {
       return (this.$store.state.user && this.$store.state.user.role === UserRole.ADMIN)
+    },
+    canComment() {
+      return (this.$store.state.user && this.$store.state.user.role >= UserRole.USER)
+    },
+    canCreateNarration() {
+      return this.$store.state.user && this.$store.state.user.role >= UserRole.MODERATOR && this.post.author.username === this.$store.state.user.username && !this.post.narration
     }
   },
   mounted() {
     this.client = new ClientService(this.$store);
+    this.client.get("post", this.$route.params.id)
     if (this.editor && !this.content) {
       this.content = this.editor.getHTML();
+      setTimeout(() => this.transformEmbeds(), 2000);
     }
   },
   methods: {
@@ -125,8 +174,27 @@ export default {
       this.editor = editor;
       if (this.post && !this.content) {
         this.content = this.editor.getHTML();
+        setTimeout(() => this.transformEmbeds(), 2000);
       }
     },
+    addNarration() {
+      this.client.get("narration", this.post.id).then((response) => {
+        this.$nuxt.refresh()
+      }).catch((err) => {
+        console.log(err.response)
+      })
+    },
+    transformEmbeds() {
+      document.querySelectorAll("a[href]").forEach(async (link) => {
+        const href = link.getAttribute("href")
+        if (href && /(?:youtube\.com\/\S*(?:(?:\/e(?:mbed))?\/|watch\?(?:\S*?&?v\=))|youtu\.be\/)([a-zA-Z0-9_-]{6,11})/g.test(href)) {
+          const video = (await axios.get(`https://www.youtube.com/oembed?url=${href}&format=json`)).data
+          if (video && video.html) {
+            link.outerHTML = `<div class="youtube-embed"><div class="youtube-embed-container">${video.html}</div></div>`
+          }
+        }
+      })
+    }
   },
 };
 </script>

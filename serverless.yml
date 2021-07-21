@@ -1,0 +1,31 @@
+# serverless.yml
+service: wirefact-web
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'}
+  region: ap-south-1
+  apiGateway:
+    binaryMediaTypes:
+      - '*/*'
+  environment:
+    # stops telemetry output from nuxt
+    NUXT_TELEMETRY_DISABLED: 1
+
+functions:
+  nuxt:
+    timeout: 30
+    handler: app.handler
+    events:
+      - http: ANY /
+      - http: ANY /{proxy+}
+
+package:
+  include:
+    # ensures that the build output gets packaged
+    - .nuxt/**
+    - content/**
+
+plugins:
+  - serverless-offline

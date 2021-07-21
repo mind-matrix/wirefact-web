@@ -8,7 +8,7 @@ export class BaseService {
     constructor(store: Store<any>) {
 
         this.client = axios.create({
-            baseURL: process.env.API!,
+            baseURL: process.env.API_URL!,
             responseType: "json"
         })
         
