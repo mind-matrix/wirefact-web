@@ -50,7 +50,8 @@ export class TipTapImage extends Node {
             }],
             toDOM: (node) => {
                 return ['img', {
-                    src: node.attrs.src,
+                    src: `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${node.attrs.width} ${node.attrs.height}"/%3E`,
+                    dataSrc: node.attrs.src,
                     style: `position: relative; margin: 0 auto; height: ${node.attrs.height}px; width: ${node.attrs.width}px;`,
                     alt: node.attrs.alt,
                     title: node.attrs.title,

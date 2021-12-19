@@ -166,7 +166,7 @@ export default {
     this.client.get("post", this.$route.params.id)
     if (this.editor && !this.content) {
       this.content = this.editor.getHTML();
-      setTimeout(() => this.transformEmbeds(), 2000);
+      setTimeout(() => this.applyContentTransforms(), 2000);
     }
   },
   methods: {
@@ -174,7 +174,7 @@ export default {
       this.editor = editor;
       if (this.post && !this.content) {
         this.content = this.editor.getHTML();
-        setTimeout(() => this.transformEmbeds(), 2000);
+        setTimeout(() => this.applyContentTransforms(), 2000);
       }
     },
     addNarration() {
@@ -184,7 +184,7 @@ export default {
         console.log(err.response)
       })
     },
-    transformEmbeds() {
+    applyContentTransforms() {
       document.querySelectorAll("a[href]").forEach(async (link) => {
         const href = link.getAttribute("href")
         if (href && /(?:youtube\.com\/\S*(?:(?:\/e(?:mbed))?\/|watch\?(?:\S*?&?v\=))|youtu\.be\/)([a-zA-Z0-9_-]{6,11})/g.test(href)) {
@@ -193,6 +193,9 @@ export default {
             link.outerHTML = `<div class="youtube-embed"><div class="youtube-embed-container">${video.html}</div></div>`
           }
         }
+      })
+      document.querySelectorAll("img[data-src]").forEach((image) => {
+        image.src = image.getAttribute('data-src')
       })
     }
   },

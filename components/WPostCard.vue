@@ -3,7 +3,7 @@
         <div v-if="narration" class="ribbon">
             <span>narrated</span>
         </div>
-        <v-img v-if="cover" width="100%" height="auto" max-height="280" :src="`https://wirefact-media.s3.ap-south-1.amazonaws.com/${cover.key}`"></v-img>
+        <v-img v-if="cover" width="100%" height="auto" max-height="280" :src="`https://wirefact-media.s3.ap-south-1.amazonaws.com/${cover.key}`" :lazy-src="placeholder(cover.width, cover.height)"></v-img>
         <v-card-subtitle class="pl-0 pb-0">
             <v-row dense>
                 <v-col cols="auto" class="pa-0 px-2">
@@ -63,6 +63,9 @@ export default {
     methods: {
         toggleFavourite() {
             this.$store.commit("toggleFav", this.id)
+        },
+        placeholder(width, height) {
+            return `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}"/%3E`
         }
     }
 }
